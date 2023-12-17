@@ -17,6 +17,7 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
+          maven-version: '3.9.6'
       - name: Build Project
         run: mvn clean install -DskipTests
       - name: Configure AWS credentials
