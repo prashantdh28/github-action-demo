@@ -1,18 +1,14 @@
-name: CICD
+name: CICD for Development Branch
 
 on:
   push:
     branches:
-      - main
       - development
-      - stage
-      - feature/*
-      - fixes/*
-      - hotfix/*
+
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: [united-platform-runner]
     steps:
       - name: Checkout source
         uses: actions/checkout@v3
@@ -57,24 +53,13 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
       - name: Docker ECR Login
-        run: aws ecr get-login-password --region eu-north-1 | docker login --username AWS --password-stdin 590212309329.dkr.ecr.eu-north-1.amazonaws.com
+        run: aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin 590212309329.dkr.ecr.eu-north-1.amazonaws.com
       - name: Pull Image from ECR
         run: docker pull ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/unitedplatform-dev:latest
       - name: Delete old container
         run: docker rm -f unitedplatform-container
       - name: Run docker container
         run: docker run -d -p 8080:8080 --name unitedplatform-container ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/unitedplatform-dev:latest
-      - name: Conditional deployment based on branch
+      - name: Deploy to development environment
         run: |
-          if [ "${GITHUB_REF}" = "refs/heads/main" ]; then
-            echo "Deploying to production environment"
-            # Additional production deployment steps if needed
-          elif [[ "${GITHUB_REF}" =~ ^refs/heads/development|^refs/heads/stage ]]; then
-            echo "Deploying to staging environment"
-            # Additional staging deployment steps if needed
-          elif [[ "${GITHUB_REF}" =~ ^refs/heads/feature/|^refs/heads/fixes/|^refs/heads/hotfix/ ]]; then
-            echo "Deploying to feature/fixes/hotfix environment"
-            # Additional feature/fixes/hotfix deployment steps if needed
-          else
-            echo "Skipping deployment for branch: ${GITHUB_REF}"
-          fi
+          echo "Deploying to development environment"
